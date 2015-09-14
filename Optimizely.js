@@ -9,17 +9,26 @@
     },
     isInitialized = false,
     forwarderSettings,
-    name = 'Optimizely';
+    name = 'Optimizely',
+    reportingService,
+    id = null;
 
     function processEvent(event) {
         if (isInitialized) {
             try {
-                if (event.dt == MessageType.PageEvent) {
-                    if (event.et == window.mParticle.EventType.Transaction && data.attrs && data.attrs.RevenueAmount) {
+                if (event.EventDataType == MessageType.PageEvent) {
+                    if (event.EventCategory == window.mParticle.EventType.Transaction &&
+                        data.EventAttributes &&
+                        data.EventAttributes.RevenueAmount) {
+
                         logTransaction(event);
                     }
                     else {
                         logEvent(event);
+                    }
+
+                    if (reportingService) {
+                        reportingService(id, event);
                     }
                 }
 
@@ -34,35 +43,43 @@
     }
 
     function logEvent(data) {
+        var revenue;
+
         window.optimizely = window.optimizely || [];
-        if (data.attrs && data.attrs['$Amount']) {
-            var revenue = parseFloat(data.attrs['$Amount']) || 0;
+
+        if (data.EventAttributes && data.EventAttributes['$Amount']) {
+            revenue = parseFloat(data.EventAttributes['$Amount']) || 0;
             revenue *= 100.0;
-            window.optimizely.push(['trackEvent', data.n, { 'revenue': revenue }]);
-        } else {
-            window.optimizely.push(["trackEvent", data.n]);
+            window.optimizely.push(['trackEvent', data.EventName, { 'revenue': revenue }]);
+        }
+        else {
+            window.optimizely.push(["trackEvent", data.EventName]);
         }
     }
 
     function logTransaction(data) {
         window.optimizely = window.optimizely || [];
-        var revenue = parseFloat(data.attrs.RevenueAmount) || 0;
+        var revenue = parseFloat(data.EventAttributes.RevenueAmount) || 0;
         revenue *= 100.0;
-        window.optimizely.push(['trackEvent', data.attrs.ProductName, { 'revenue': revenue }]);
+        window.optimizely.push(['trackEvent', data.EventAttributes.ProductName, { 'revenue': revenue }]);
     }
 
     function setUserAttribute(key, value) {
         if (isInitialized) {
             window.optimizely = window.optimizely || [];
             window['optimizely'].push(['setDimensionValue', key, value]);
-        } else {
+        }
+        else {
             return 'Can\'t call setUserAttribute on forwarder ' + name + ', not initialized';
         }
     }
 
-    function initForwarder(settings) {
+    function initForwarder(settings, service, moduleId) {
+        forwarderSettings = settings;
+        reportingService = service;
+        id = moduleId;
+
         try {
-            forwarderSettings = settings;
             function addOptimizely(u) {
                 var head = document.getElementsByTagName('head')[0];
                 s = document.createElement('script');
@@ -71,9 +88,8 @@
             }
 
             var protocol = forwarderSettings.useSecure == 'True' ? 'https:' : '';
-            addOptimizely(
-                protocol + '//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js'
-                );
+
+            addOptimizely(protocol + '//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js');
 
             isInitialized = true;
 
