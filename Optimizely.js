@@ -5,21 +5,29 @@
         PageView: 3,
         PageEvent: 4,
         CrashReport: 5,
-        OptOut: 6
+        OptOut: 6,
+        Commerce: 16
     },
     isInitialized = false,
     forwarderSettings,
     name = 'Optimizely',
     reportingService,
-    id = null;
+    id = null,
+    isTesting = false;
+
+    function reportEvent(event) {
+        if (reportingService) {
+            reportingService(id, event);
+        }
+    }
 
     function processEvent(event) {
         if (isInitialized) {
             try {
                 if (event.EventDataType == MessageType.PageEvent) {
                     if (event.EventCategory == window.mParticle.EventType.Transaction &&
-                        data.EventAttributes &&
-                        data.EventAttributes.RevenueAmount) {
+                        event.EventAttributes &&
+                        event.EventAttributes.RevenueAmount) {
 
                         logTransaction(event);
                     }
@@ -27,9 +35,13 @@
                         logEvent(event);
                     }
 
-                    if (reportingService) {
-                        reportingService(id, event);
-                    }
+                    reportEvent(event);
+                }
+                else if(event.EventDataType == MessageType.Commerce &&
+                    event.ProductAction &&
+                    event.ProductAction.TotalAmount) {
+                    logCommerce(event);
+                    reportEvent(event);
                 }
 
                 return 'Successfully sent to ' + name;
@@ -57,6 +69,14 @@
         }
     }
 
+    function logCommerce(data) {
+        window.optimizely.push(['trackEvent',
+            data.ProductAction.TransactionId,
+            {
+                'revenue': data.ProductAction.TotalAmount * 100
+            }]);
+    }
+
     function logTransaction(data) {
         window.optimizely = window.optimizely || [];
         var revenue = parseFloat(data.EventAttributes.RevenueAmount) || 0;
@@ -67,17 +87,18 @@
     function setUserAttribute(key, value) {
         if (isInitialized) {
             window.optimizely = window.optimizely || [];
-            window['optimizely'].push(['setDimensionValue', key, value]);
+            window.optimizely.push(['setDimensionValue', key, value]);
         }
         else {
             return 'Can\'t call setUserAttribute on forwarder ' + name + ', not initialized';
         }
     }
 
-    function initForwarder(settings, service, moduleId) {
+    function initForwarder(settings, service, moduleId, testMode) {
         forwarderSettings = settings;
         reportingService = service;
         id = moduleId;
+        isTesting = testMode;
 
         try {
             function addOptimizely(u) {
@@ -89,7 +110,9 @@
 
             var protocol = forwarderSettings.useSecure == 'True' ? 'https:' : '';
 
-            addOptimizely(protocol + '//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js');
+            if(isTesting !== true) {
+                addOptimizely(protocol + '//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js');
+            }
 
             isInitialized = true;
 
