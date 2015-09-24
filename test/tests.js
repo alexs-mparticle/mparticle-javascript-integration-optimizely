@@ -39,7 +39,7 @@ describe('Optimizely Forwarder', function () {
             getName: function () {
                 return 'blahblah';
             }
-        }
+        };
 
     before(function () {
         mParticle.EventType = EventType;
