@@ -30,12 +30,11 @@
             isInitialized = false,
             forwarderSettings,
             reportingService,
-            id = null,
             isTesting = false;
 
         function reportEvent(event) {
             if (reportingService) {
-                reportingService(id, event);
+                reportingService(self, event);
             }
         }
 
@@ -112,10 +111,9 @@
             }
         }
 
-        function initForwarder(settings, service, moduleId, testMode) {
+        function initForwarder(settings, service, testMode) {
             forwarderSettings = settings;
             reportingService = service;
-            id = moduleId;
             isTesting = testMode;
 
             try {
