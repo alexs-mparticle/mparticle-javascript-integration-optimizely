@@ -32,6 +32,8 @@
             reportingService,
             isTesting = false;
 
+        self.name = name;
+
         function reportEvent(event) {
             if (reportingService) {
                 reportingService(self, event);
