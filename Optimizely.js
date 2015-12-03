@@ -126,10 +126,8 @@
                     head.appendChild(s);
                 }
 
-                var protocol = forwarderSettings.useSecure == 'True' ? 'https:' : '';
-
                 if(isTesting !== true) {
-                    addOptimizely(protocol + '//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js');
+                    addOptimizely('//cdn.optimizely.com/js/' + forwarderSettings.projectId + '.js');
                 }
 
                 isInitialized = true;
@@ -140,7 +138,6 @@
 
                     var experiments = data.experiments;
                     var map = data.state.variationNamesMap;
-                    var traits = {};
 
                     for (var experimentId in map) {
                         if (map.hasOwnProperty(experimentId)) {
