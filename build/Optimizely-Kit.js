@@ -118,18 +118,44 @@ For more userIdentity types, see http://docs.mparticle.com/developers/sdk/javasc
 
 var identityHandler = {
     onUserIdentified: function(mParticleUser) {
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     },
     onIdentifyCompleted: function(mParticleUser, identityApiRequest) {
-
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     },
     onLoginCompleted: function(mParticleUser, identityApiRequest) {
-
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     },
     onLogoutCompleted: function(mParticleUser, identityApiRequest) {
-
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     },
     onModifyCompleted: function(mParticleUser, identityApiRequest) {
-
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     },
 
 /*  In previous versions of the mParticle web SDK, setting user identities on
@@ -137,7 +163,12 @@ var identityHandler = {
     filling out `onSetUserIdentity` for maximum compatibility.
 */
     onSetUserIdentity: function(forwarderSettings, id, type) {
-
+        var optimizelyEvent = {
+            type: 'event',
+            eventName: 'addToCart',
+            tags: {}
+        };
+        window['optimizely'].push(optimizelyEvent);
     }
 };
 
@@ -288,7 +319,12 @@ var UserAttributeHandler = require('../../../integration-builder/user-attribute-
 
         function initForwarder(settings, service, testMode, trackerId, userAttributes, userIdentities) {
             forwarderSettings = settings;
-            reportingService = service;
+            if (window.mParticle.isTestEnvironment) {
+                reportingService = function() {
+                }
+            } else {
+                reportingService = service;
+            }
 
             try {
                 Initialization.initForwarder(settings, testMode, userAttributes, userIdentities, processEvent, eventQueue, isInitialized);
